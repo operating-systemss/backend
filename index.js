@@ -23,48 +23,51 @@ initializeApp({
 });
 
 const db = getFirestore();
-const doc = list.filter(i => i.cpu > 0,1);
+let doc = list.filter(i => i.cpu > 0,1);
 const docRef = db.collection('data').doc('process');
 await docRef.set({
-    name: doc
-});
+    ...doc
+}); 
 
 app.get("/process", async (req,res,next) => {
    
     const getData = await db.collection('data').get();
     getData.forEach(doc => {
-        let data = doc.data().name;
-        res.send({ data })
+        let data = doc.data();
+        res.send(Object.values(data))
     })
 });
 
 app.get("/process/:pid", async (req,res,next) =>{
     const getData = await db.collection('data').doc("process").get();
     if(!getData.exists){
-        console.log('no such document!')
+        console.log('no such document!') 
         return; 
     }
-    let doc = getData.data().name;
-    let result = doc.filter(i => i.pid === req.params)
-    console.log(result)
-    res.send({ doc });
+    let doc = Object.values(getData.data());
+    let pid = req.params.pid;
+    let result = doc.filter(i => i.pid == pid)
+    res.send(result);
 })
 
 app.delete("/process/:pid", async (req,res,next) => {
-    await docRef.set({
-        name: doc
-    });
-    ps.kill( 'pid', function( err ) {
+    ps.kill( parseInt(req.params.pid), async( err ) =>{
         if (err) {
-            throw new Error( err );
+            throw new Error(" process kill error : ", err);
         }
         else {
             console.log( 'Process %s has been killed!');
-        }
+            let lists = await psList()   
+            let doc = lists.filter(i => i.cpu > 0,1);
+            const docRef = db.collection('data').doc('process');
+            await docRef.set({
+                ...doc
+            }); 
+         }
+
     });
 })
 
-// eger bir process kill edersek tekrar /process calistirmaliyiz !
 
 app.listen(3000, ()=> {
     console.log(`server running on ${3000}`)
