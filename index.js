@@ -25,11 +25,12 @@ initializeApp({
 const db = getFirestore();
 const doc = list.filter(i => i.cpu > 0,1);
 const docRef = db.collection('data').doc('process');
+await docRef.set({
+    name: doc
+});
 
 app.get("/process", async (req,res,next) => {
-    await docRef.set({
-        name: doc
-    });
+   
     const getData = await db.collection('data').get();
     getData.forEach(doc => {
         let data = doc.data().name;
@@ -38,13 +39,10 @@ app.get("/process", async (req,res,next) => {
 });
 
 app.get("/process/:pid", async (req,res,next) =>{
-    await docRef.set({
-        name: doc
-    });
     const getData = await db.collection('data').doc("process").get();
     if(!getData.exists){
         console.log('no such document!')
-        return;
+        return; 
     }
     let doc = getData.data().name;
     let result = doc.filter(i => i.pid === req.params)

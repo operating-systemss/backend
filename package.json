@@ -14,9 +14,11 @@
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.2",
+    "firebase": "^9.6.1",
     "firebase-admin": "^10.0.1",
     "ps-list": "^8.0.0",
     "ps-node": "^0.1.6",
+    "socket.io": "^4.4.0",
     "webcpu": "^0.4.8"
   }
 }
