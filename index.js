@@ -21,58 +21,56 @@ initializeApp({
       )
 });
 
-setInterval(async() => {
-    const db = getFirestore();
-    let list = await psList()
-    let doc = list.filter(i => i.cpu > 0,1);
-    let docRef = await db.collection('data').doc('process');
+const db = getFirestore();
+let list = await psList()
+let doc = list.filter(i => i.cpu > 0,1);
+let docRef = await db.collection('data').doc('process');
 
-    await docRef.set({ doc }); 
+await docRef.set({ doc }); 
 
 
-    app.get("/process", async (req,res,next) => {
-    
-        const getData = await db.collection('data').get();
-        getData.forEach(doc => {
-            let data = doc.data();
-            res.send(Object.values(data))
-        })
-    });
+app.get("/process", async (req,res,next) => {
 
-    app.get("/process/:pid", async (req,res,next) =>{
-        const getData = await db.collection('data').doc("process").get();
-        if(!getData.exists){
-            console.log('no such document!') 
-            return; 
+    const getData = await db.collection('data').get();
+    getData.forEach(doc => {
+        let data = doc.data();
+        res.send(Object.values(data))
+    })
+});
+
+app.get("/process/:pid", async (req,res,next) =>{
+    const getData = await db.collection('data').doc("process").get();
+    if(!getData.exists){
+        console.log('no such document!') 
+        return; 
+    }
+    let doc = Object.values(getData.data());
+    let pid = req.params.pid;
+    let result = doc.filter(i => i.pid == pid)
+    res.send(result);
+})
+
+app.delete("/process/:pid", async (req,res,next) => {
+    await ps.kill( parseInt(req.params.pid), async( err ) =>{
+        if (err) {
+            throw new Error(" process kill error : ", err);
         }
-        let doc = Object.values(getData.data());
-        let pid = req.params.pid;
-        let result = doc.filter(i => i.pid == pid)
-        res.send(result);
-    })
+        else {
+            console.log( 'Process %s has been killed!');
+            let lists = await psList()   
+            let doc = lists.filter(i => i.cpu > 0,1);
+            const docRef = db.collection('data').doc('process');
+            await docRef.set({ doc }); 
+            res.send({ message: 'Program Killed'})
+        }
 
-    app.delete("/process/:pid", async (req,res,next) => {
-        console.log("del")
-        await ps.kill( parseInt(req.params.pid), async( err ) =>{
-            if (err) {
-                throw new Error(" process kill error : ", err);
-            }
-            else {
-                console.log( 'Process %s has been killed!');
-                let lists = await psList()   
-                let doc = lists.filter(i => i.cpu > 0,1);
-                const docRef = db.collection('data').doc('process');
-                await docRef.set({ doc }); 
-            }
+    });
+})
 
-        });
-    })
-
-    let PORT = Math.floor(1000 + Math.random() * 9000);
-    app.listen(PORT, (err)=> {
-        if(err)
-            return console.log("already error : ", err);
-        console.log(`server running on ${PORT}`)
-    },)
-}, 1000);
+let PORT = 3000
+app.listen(PORT, (err)=> {
+    if(err)
+        return console.log("already error : ", err);
+    console.log(`server running on ${PORT}`)
+})
 
