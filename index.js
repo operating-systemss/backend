@@ -25,9 +25,9 @@ initializeApp({
 const db = getFirestore();
 let doc = list.filter(i => i.cpu > 0,1);
 const docRef = db.collection('data').doc('process');
-await docRef.set({
-    ...doc
-}); 
+
+await docRef.set({ doc }); 
+
 
 app.get("/process", async (req,res,next) => {
    
@@ -68,9 +68,6 @@ app.delete("/process/:pid", async (req,res,next) => {
     });
 })
 
-
 app.listen(3000, ()=> {
     console.log(`server running on ${3000}`)
 })
-
-
